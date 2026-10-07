@@ -1,0 +1,33 @@
+[project]
+name = "oneai-backend"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008", "E501"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["reportlab.*", "pytesseract"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["app"]
+
+[tool.coverage.report]
+# Gate applies to the core engines (see TESTING.md); API glue is exercised by tests/test_api.py but not gated.
+include = ["app/medguard/*", "app/careloop/*", "app/guardrails.py", "app/wellbeing.py", "app/llm.py", "app/cost.py", "app/antibiotic.py"]

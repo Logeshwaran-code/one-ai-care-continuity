@@ -1,0 +1,12 @@
+{"cases": [
+ {"name": "ravi baseline - no alerts", "meds": ["Glycomet 500", "Amaryl 1", "Telma 40", "Stamlo 5"], "expect": []},
+ {"name": "double ARB", "meds": ["Telma 40", "Losar 50"], "expect": ["duplicate|losartan+telmisartan"]},
+ {"name": "NSAID + ARB", "meds": ["Telma 40", "Voveran 50"], "expect": ["interaction|diclofenac+telmisartan"]},
+ {"name": "ARB + ACEI", "meds": ["Telma", "Envas"], "expect": ["interaction|enalapril+telmisartan"]},
+ {"name": "warfarin + aspirin", "meds": ["Warf", "Ecosprin"], "expect": ["interaction|aspirin+warfarin"]},
+ {"name": "same ingredient two brands", "meds": ["Crocin", "Combiflam"], "expect": ["duplicate|ibuprofen + paracetamol+paracetamol"]},
+ {"name": "penicillin allergy", "meds": ["Mox 500"], "allergies": ["penicillin"], "expect": ["allergy|allergy:penicillin+amoxicillin"]},
+ {"name": "sildenafil + nitrate", "meds": ["Sildenafil", "Monotrate"], "expect": ["interaction|isosorbide mononitrate+sildenafil"]},
+ {"name": "aspirin + diclofenac", "meds": ["Ecosprin", "Voveran"], "expect": ["interaction|aspirin+diclofenac"]},
+ {"name": "two NSAIDs", "meds": ["Voveran", "Brufen"], "expect": ["duplicate|diclofenac+ibuprofen"]}
+]}

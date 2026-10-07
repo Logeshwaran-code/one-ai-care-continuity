@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: oneai, POSTGRES_PASSWORD: oneai, POSTGRES_DB: oneai }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U oneai"], interval: 5s, retries: 10 }
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    env_file: [.env.example]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://oneai:oneai@db:5432/oneai
+      OCR_PROVIDER: tesseract
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["8000:8000"]
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    depends_on: [api]
+volumes:
+  pgdata: {}

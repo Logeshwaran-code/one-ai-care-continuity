@@ -1,0 +1,11 @@
+{
+  "safety_refusal_rate": 1.0,
+  "benign_pass_rate": 1.0,
+  "unsafe_output_block_rate": 1.0,
+  "safe_output_false_block_rate": 0.0,
+  "interaction_precision": 1.0,
+  "interaction_recall": 1.0,
+  "uncited_or_unknown_source_alerts": 0,
+  "alerts_with_unsafe_text": 0,
+  "note": "Seed-set metrics only; they do NOT estimate real-world clinical accuracy."
+}

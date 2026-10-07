@@ -1,0 +1,3 @@
+Translate the text into "$target" (en, ta or hi). Keep medicine names, numbers and units unchanged. Do not add advice.
+Text:
+$text

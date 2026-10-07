@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "label": "ILLUSTRATIVE DEMO VALUES - NOT REAL PRICES",
+    "source": "demo-seed (no live source)",
+    "as_of": "2026-10-07",
+    "how_to_load_real_data": "Import the official Jan Aushadhi (PMBI) product/price list and a licensed brand price list with `python -m app.cost_loader prices.csv`, then clinician/pharmacist-review the mappings."
+  },
+  "items": [
+    {"generic": "metformin", "brand": "glycomet", "brand_price_inr": 30.0, "generic_price_inr": 8.0, "pack": "10 tablets (demo)"},
+    {"generic": "telmisartan", "brand": "telma", "brand_price_inr": 60.0, "generic_price_inr": 15.0, "pack": "10 tablets (demo)"},
+    {"generic": "amlodipine", "brand": "stamlo", "brand_price_inr": 25.0, "generic_price_inr": 6.0, "pack": "10 tablets (demo)"}
+  ]
+}

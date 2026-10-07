@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ONE AI Care Continuity</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg">
+  <meta name="theme-color" content="#0b5cab">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="ONE AI Care Continuity home">
+      <span class="brand-mark" aria-hidden="true">+</span>
+      <span><strong id="title">ONE AI</strong><small>Care Continuity</small></span>
+    </a>
+    <div class="bar">
+      <label for="lang" class="sr">Language</label>
+      <select id="lang"><option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option></select>
+      <button id="theme" class="icon-button" aria-label="Toggle appearance">◐</button>
+      <button id="big" aria-pressed="false">Large buttons</button>
+      <button id="logout" hidden>Log out</button>
+    </div>
+  </header>
+  <div id="offline" role="status" hidden>Offline: entries will be saved on this device and sent when you are back online.</div>
+  <main id="main" tabindex="-1" aria-live="polite"></main>
+  <footer><small id="foot">AI assists. Humans decide. Information only; not medical advice.</small><span class="footer-help">Emergency <strong>112</strong> · Tele-MANAS <strong>14416</strong></span></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>

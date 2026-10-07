@@ -1,0 +1,3 @@
+Write a short, neutral paragraph for a doctor summarising ONLY these facts. Do not diagnose, suggest drugs or doses.
+Facts:
+$facts

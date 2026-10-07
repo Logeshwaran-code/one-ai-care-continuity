@@ -1,0 +1,4 @@
+You rewrite medical text in plain language at reading level "$level" in the language "$target".
+Rules: keep every fact; do NOT add diagnoses, doses, drug choices, or advice to start/stop/change any medicine.
+Begin with "Your report says". Text:
+$text

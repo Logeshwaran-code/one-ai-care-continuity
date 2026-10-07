@@ -7,3 +7,5 @@ __pycache__/
 htmlcov/
 node_modules/
 eval/report.json
+backend/eval/report.json
+e2e/test-results/

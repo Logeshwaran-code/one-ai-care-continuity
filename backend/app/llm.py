@@ -83,8 +83,25 @@ def _mock_narrative(v: dict[str, Any]) -> str:
     return str(v.get("facts", ""))
 
 
+def _mock_document_review(v: dict[str, Any]) -> str:
+    text = str(v.get("text", ""))
+    for term, plain in sorted(PLAIN.items(), key=lambda kv: -len(kv[0])):
+        text = _replace_word(text, term, plain)
+    sentences = [s.strip() for s in text.replace("\n", " ").split(".") if s.strip()]
+    if not sentences:
+        return "The document did not contain a readable clinical statement."
+    return (
+        "Documented findings: " + ". ".join(sentences[:4]) + ".\n\n"
+        "Prescription context: The medicines and instructions above are copied or explained "
+        "from the document and must be confirmed with your pharmacist or doctor.\n\n"
+        "Body-condition context: These findings describe what the document reports; they do not "
+        "confirm a diagnosis. Ask your clinician what they mean for you."
+    )
+
+
 MOCK_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "simplify": _mock_simplify, "translate": _mock_translate, "visit_narrative": _mock_narrative,
+    "document_review": _mock_document_review,
 }
 
 

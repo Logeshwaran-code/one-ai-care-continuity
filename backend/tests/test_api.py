@@ -23,6 +23,31 @@ async def test_auth_failures_and_refresh_rotation(client, auth):
     assert (await client.post(f"{P}/auth/refresh", json={"refresh_token": r1.json()["refresh_token"]})).status_code == 401  # family revoked
 
 
+async def test_document_explanation_accepts_text_and_does_not_store(client, auth):
+    headers, _ = await auth(client, "ravi@demo.test")
+    response = await client.post(
+        f"{P}/assistant/document",
+        headers=headers,
+        files={"file": ("reading.txt", b"Blood pressure was 128 over 82 today.", "text/plain")},
+        data={"lang": "en"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filename"] == "reading.txt"
+    assert body["stored"] is False
+    assert body["text"]
+
+
+async def test_document_explanation_rejects_unsupported_files(client, auth):
+    headers, _ = await auth(client, "ravi@demo.test")
+    response = await client.post(
+        f"{P}/assistant/document",
+        headers=headers,
+        files={"file": ("reading.zip", b"not a medical document", "application/zip")},
+    )
+    assert response.status_code == 415
+
+
 async def test_registration_cannot_create_staff(client):
     r = await client.post(f"{P}/auth/register", json={"email": "x@y.com", "name": "X", "password": "longenough123", "role": "doctor"})
     assert r.status_code == 403

@@ -50,14 +50,27 @@ async def grant(body: ConsentIn, user: CurrentUser, session: Session) -> dict[st
         raise HTTPException(403, "Only patients grant consent")
     if not set(body.scopes) <= set(ALL_SCOPES) or not body.scopes:
         raise HTTPException(422, f"scopes must be a non-empty subset of {ALL_SCOPES}")
-    g = await session.scalar(select(User).where(User.email == body.grantee_email.lower()))
+    email = body.grantee_email.strip().casefold()
+    demo_aliases = {
+        "doctor@demo.com": "doctor@demo.test",
+        "worker@demo.com": "worker@demo.test",
+        "priya@demo.com": "priya@demo.test",
+    }
+    email = demo_aliases.get(email, email)
+    g = await session.scalar(select(User).where(User.email == email))
     if g is None or g.role == "admin" or g.id == user.id:
-        raise HTTPException(404, "Grantee not found")
+        raise HTTPException(404, "Care team account not found. Check the email address and try again.")
     old = await session.scalars(select(Consent).where(Consent.patient_id == user.id, Consent.grantee_id == g.id, Consent.revoked_at.is_(None)))
-    for c in old:
-        c.revoked_at = utcnow()
-    c = Consent(patient_id=user.id, grantee_id=g.id, scopes=body.scopes)
-    session.add(c)
+    active = list(old)
+    if active:
+        c = max(active, key=lambda item: item.created_at)
+        c.scopes = sorted(set(c.scopes) | set(body.scopes))
+        for duplicate in active:
+            if duplicate.id != c.id:
+                duplicate.revoked_at = utcnow()
+    else:
+        c = Consent(patient_id=user.id, grantee_id=g.id, scopes=sorted(set(body.scopes)))
+        session.add(c)
     session.add(AuditLog(actor_id=user.id, actor_role=user.role, patient_id=user.id, action="consent_grant", scope=",".join(body.scopes)))
     await session.commit()
     return {"id": c.id, "grantee": g.email, "scopes": c.scopes}
@@ -67,7 +80,13 @@ async def grant(body: ConsentIn, user: CurrentUser, session: Session) -> dict[st
 async def list_consents(user: CurrentUser, session: Session) -> list[dict[str, object]]:
     rows = (await session.execute(select(Consent, User).join(User, User.id == Consent.grantee_id)
                                   .where(Consent.patient_id == user.id, Consent.revoked_at.is_(None)))).all()
-    return [{"id": c.id, "grantee": u.email, "name": u.name, "role": u.role, "scopes": c.scopes} for c, u in rows]
+    latest: dict[int, tuple[Consent, User]] = {}
+    for consent, grantee in rows:
+        previous = latest.get(grantee.id)
+        if previous is None or consent.created_at > previous[0].created_at:
+            latest[grantee.id] = (consent, grantee)
+    return [{"id": c.id, "grantee": u.email, "name": u.name, "role": u.role, "scopes": c.scopes}
+            for c, u in latest.values()]
 
 
 @router.delete("/consents/{cid}", status_code=204)
@@ -175,7 +194,7 @@ async def medguard_report(pid: int, user: CurrentUser, session: Session) -> dict
 
 # ------------------------------------------------------------------------------------ measurements / doses
 class MeasIn(BaseModel):
-    kind: str = Field(pattern="^(bp|glucose|weight)$")
+    kind: str = Field(pattern="^(bp|glucose|weight|temperature)$")
     v1: float = Field(gt=0, lt=1000)
     v2: float | None = Field(default=None, gt=0, lt=500)
     measured_at: datetime | None = None
@@ -249,11 +268,29 @@ async def insights(pid: int, user: CurrentUser, session: Session) -> dict[str, o
 @router.get("/patients/{pid}/today")
 async def today(pid: int, user: CurrentUser, session: Session) -> dict[str, object]:
     await authorize(session, user, pid, "adherence", "today_view")
-    d = date.today()
+    now = utcnow()
+    d = now.date()
     meds = await _active_meds(session, pid)
     taken = {(x.medication_id, x.slot) for x in (await session.scalars(select(DoseLog).where(DoseLog.patient_id == pid, DoseLog.day == d))).all()}
-    return {"date": d.isoformat(), "doses": [{"medication_id": m.id, "name": m.raw_name, "dose": m.dose_text, "slot": s, "taken": (m.id, s) in taken}
-                                             for m in meds for s in sorted(m.timing, key=SLOTS.index)]}
+    schedules = [cl.MedSchedule(m.id, m.raw_name, m.timing, m.start_date,
+                                 m.start_date + timedelta(days=m.course_days - 1) if m.course_days else None)
+                 for m in meds]
+    due_today = {(mid, day, slot) for mid, day, slot in cl.expected_slots(schedules, d, now)}
+    missed = [{"medication_id": m.id, "name": m.raw_name, "slot": slot}
+              for m in meds for slot in sorted(m.timing, key=SLOTS.index)
+              if (m.id, d, slot) in due_today and (m.id, slot) not in taken]
+    return {
+        "date": d.isoformat(),
+        "doses": [{"medication_id": m.id, "name": m.raw_name, "dose": m.dose_text, "slot": s,
+                   "taken": (m.id, s) in taken}
+                  for m in meds for s in sorted(m.timing, key=SLOTS.index)],
+        "missed_doses": missed,
+        "alert": {
+            "kind": "missed_dose",
+            "title": "A medicine dose still needs your attention",
+            "message": "One or more scheduled doses have not been marked as taken. Check your prescribed instructions or contact your pharmacist/doctor. Do not take an extra dose to catch up.",
+        } if missed else None,
+    }
 
 
 # ------------------------------------------------------------------------------------ elder voice logging

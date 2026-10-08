@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from app import cost
 from app.antibiotic import course_status
 from app.guardrails import validate_output
-from app.llm import LLMGateway, LLMRequest
+from app.llm import LLMGateway, LLMRequest, MockProvider
 
 
 class Flaky:
@@ -47,7 +47,7 @@ async def test_structured_output_validation():
 
 
 async def test_mock_simplify_levels_and_translate():
-    g = LLMGateway()
+    g = LLMGateway(MockProvider())
     s = await g.generate("simplify", {"text": "Hypertension noted. BID dosing of antihypertensive.", "level": "simple", "target": "en"})
     assert "high blood pressure" in str(s) and "twice a day" in str(s)
     v = await g.generate("simplify", {"text": " ".join(["word"] * 40) + ".", "level": "very_simple", "target": "en"})

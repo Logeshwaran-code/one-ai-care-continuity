@@ -1,5 +1,5 @@
-from app.routers.tools import _simple_answer
 from app.llm import load_prompt
+from app.routers.tools import _simple_answer
 
 
 def test_simple_answer_explains_safe_health_questions():

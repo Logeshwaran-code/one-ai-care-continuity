@@ -105,9 +105,11 @@ async def explain_document(user: CurrentUser, file: UploadFile = File(...), lang
     text = ""
     if content_type == "application/pdf" or name.endswith(".pdf"):
         try:
+            import io
+
             from pypdf import PdfReader
             from pypdf.errors import PdfReadError
-            import io
+
             text = "\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(data)).pages)
         except (PdfReadError, OSError, ValueError) as exc:
             raise HTTPException(422, "This PDF could not be read. Try a clearer PDF or paste its text into CareSync AI.") from exc
@@ -140,7 +142,7 @@ async def explain_document(user: CurrentUser, file: UploadFile = File(...), lang
 
     try:
         result = await guarded_generate("Explain this uploaded document without changing treatment.", target, bounded_gen)
-    except (RuntimeError, asyncio.TimeoutError):
+    except (RuntimeError, TimeoutError):
         log.warning("document_ai_unavailable_using_local_review")
         async def local_review() -> str:
             return _document_review_fallback(text)
